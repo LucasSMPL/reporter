@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rep0rter by t0rch</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="/eel.js"></script>
+</head>
+<body>
+    <!-- Logo -->
+    <div class="logo-container">
+        <img src="t0_wordmark.svg" alt="ASIC IPs by Lucas" style="width: 300px;">
+    </div>
+    <!-- Header Text -->
+    <div class="header-text">
+        <p>Currently listening for ASIC IP Addresses. Press the IP Report button on your miner, and check the table below.</p>
+    </div>
+    <div class="">
+        <p style="color: #b1b1b1;">(Port 14235 = Antminer) & (Port 8888 = Whatsminer)</p>
+    </div>
+    <!-- Table -->
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>IP Source</th>
+                <th>MAC Source</th>
+                <th>Port</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Additional rows will be dynamically inserted here -->
+        </tbody>
+    </table>
+    <!-- Button Div -->
+    <div>
+        <button id="exportList">Export List</button>
+    </div>
+    <!-- EEL Script -->
+    <script>
+        eel.expose(show_data);
+        function show_data(data) {
+            var table = document.getElementById('data-table').getElementsByTagName('tbody')[0];
+            var row = table.insertRow();
+            var cellId = row.insertCell(0);
+            var cellIp = row.insertCell(1);
+            var cellMac = row.insertCell(2);
+            var cellPort = row.insertCell(3);
+
+            var credentials = "root:root@";  // Default credentials
+            if (data.port == 8888) {
+                credentials = "admin:admin@";  // Different credentials for port 8888
+            }
+
+            cellId.innerHTML = data.id;
+            cellIp.innerHTML = '<a href="http://' + credentials + data.ip_src + '/" target="_blank" rel="noreferrer noopener">' + data.ip_src + '</a>';
+            cellMac.innerHTML = data.mac_src;
+            cellPort.innerHTML = data.port;
+        }
+
+        window.onload = function() {
+            eel.start_sniffing();  // Start the packet sniffing when the page loads
+        }
+    </script>
+    <!-- CSV Download Script -->
+<script>
+    // Ensures the script runs after the entire DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Attaches event listener to the Export List button
+        document.getElementById('exportList').addEventListener('click', function() {
+            var table = document.getElementById('data-table');
+            var rows = table.querySelectorAll('tr');
+            var csv = [];
+            // Iterates over each row of the table
+            for (var i = 0; i < rows.length; i++) {
+                var row = [], cols = rows[i].querySelectorAll('td, th');
+                // Iterates over each cell in the row
+                for (var j = 0; j < cols.length; j++) {
+                    // Cleans the text in the cell and wraps it in double quotes to handle commas within text
+                    var data = cols[j].innerText.replace(/"/g, '""');
+                    row.push('"' + data + '"');
+                }
+                // Joins the row's cells with commas and adds it to the CSV array
+                csv.push(row.join(','));
+            }
+            console.log("CSV Data: ", csv.join('\n')); // Logs the complete CSV data to the console
+            downloadCSV(csv.join('\n')); // Calls the function to download the CSV
+        });
+    });
+
+    function downloadCSV(csv) {
+        // Creates a Blob with the CSV data
+        var csvFile = new Blob([csv], {type: "text/csv"});
+        var downloadLink = document.createElement("a");
+        downloadLink.download = 'exported_table.csv'; // Sets the filename for the downloaded CSV
+        downloadLink.href = window.URL.createObjectURL(csvFile); // Creates a URL for the Blob
+        downloadLink.style.display = "none"; // Hides the download link
+        document.body.appendChild(downloadLink); // Adds the download link to the document
+        downloadLink.click(); // Triggers the download
+        setTimeout(function() {
+            document.body.removeChild(downloadLink); // Removes the download link from the document
+            window.URL.revokeObjectURL(downloadLink.href); // Frees up memory by revoking the Blob URL
+        }, 100);
+    }
+</script>
+</body>
+</html>
