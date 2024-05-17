@@ -28,7 +28,15 @@ def start_sniffing():
 
     sniff(filter="udp and (port 14235 or port 8888)", prn=packet_callback, store=0)
 
+@eel.expose
+def clear_seen_ips():
+    global packet_id, seen_ips
+    packet_id = 0
+    seen_ips = set()
+    print("\033[91mCleared the IP list.\033[0m")  # 91 is the ANSI code for red
+
 eel.start('index.html', size=(800, 600))
+
 
 
 

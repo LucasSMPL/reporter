@@ -36,6 +36,7 @@
     <!-- Button Div -->
     <div>
         <button id="exportList">Export List</button>
+        <button id="clearList">Clear List</button>
     </div>
     <!-- EEL Script -->
     <script>
@@ -62,47 +63,58 @@
         window.onload = function() {
             eel.start_sniffing();  // Start the packet sniffing when the page loads
         }
+        
+        function clear_list() {
+            var table = document.getElementById('data-table').getElementsByTagName('tbody')[0];
+            // Clear all rows except the header
+            while (table.rows.length > 0) {
+                table.deleteRow(0);
+            }
+            eel.clear_seen_ips();
+        }
+
+        document.getElementById('clearList').addEventListener('click', clear_list);
     </script>
     <!-- CSV Download Script -->
-<script>
-    // Ensures the script runs after the entire DOM is fully loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        // Attaches event listener to the Export List button
-        document.getElementById('exportList').addEventListener('click', function() {
-            var table = document.getElementById('data-table');
-            var rows = table.querySelectorAll('tr');
-            var csv = [];
-            // Iterates over each row of the table
-            for (var i = 0; i < rows.length; i++) {
-                var row = [], cols = rows[i].querySelectorAll('td, th');
-                // Iterates over each cell in the row
-                for (var j = 0; j < cols.length; j++) {
-                    // Cleans the text in the cell and wraps it in double quotes to handle commas within text
-                    var data = cols[j].innerText.replace(/"/g, '""');
-                    row.push('"' + data + '"');
+    <script>
+        // Ensures the script runs after the entire DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attaches event listener to the Export List button
+            document.getElementById('exportList').addEventListener('click', function() {
+                var table = document.getElementById('data-table');
+                var rows = table.querySelectorAll('tr');
+                var csv = [];
+                // Iterates over each row of the table
+                for (var i = 0; i < rows.length; i++) {
+                    var row = [], cols = rows[i].querySelectorAll('td, th');
+                    // Iterates over each cell in the row
+                    for (var j = 0; j < cols.length; j++) {
+                        // Cleans the text in the cell and wraps it in double quotes to handle commas within text
+                        var data = cols[j].innerText.replace(/"/g, '""');
+                        row.push('"' + data + '"');
+                    }
+                    // Joins the row's cells with commas and adds it to the CSV array
+                    csv.push(row.join(','));
                 }
-                // Joins the row's cells with commas and adds it to the CSV array
-                csv.push(row.join(','));
-            }
-            console.log("CSV Data: ", csv.join('\n')); // Logs the complete CSV data to the console
-            downloadCSV(csv.join('\n')); // Calls the function to download the CSV
+                console.log("CSV Data: ", csv.join('\n')); // Logs the complete CSV data to the console
+                downloadCSV(csv.join('\n')); // Calls the function to download the CSV
+            });
         });
-    });
 
-    function downloadCSV(csv) {
-        // Creates a Blob with the CSV data
-        var csvFile = new Blob([csv], {type: "text/csv"});
-        var downloadLink = document.createElement("a");
-        downloadLink.download = 'exported_table.csv'; // Sets the filename for the downloaded CSV
-        downloadLink.href = window.URL.createObjectURL(csvFile); // Creates a URL for the Blob
-        downloadLink.style.display = "none"; // Hides the download link
-        document.body.appendChild(downloadLink); // Adds the download link to the document
-        downloadLink.click(); // Triggers the download
-        setTimeout(function() {
-            document.body.removeChild(downloadLink); // Removes the download link from the document
-            window.URL.revokeObjectURL(downloadLink.href); // Frees up memory by revoking the Blob URL
-        }, 100);
-    }
-</script>
+        function downloadCSV(csv) {
+            // Creates a Blob with the CSV data
+            var csvFile = new Blob([csv], {type: "text/csv"});
+            var downloadLink = document.createElement("a");
+            downloadLink.download = 'exported_table.csv'; // Sets the filename for the downloaded CSV
+            downloadLink.href = window.URL.createObjectURL(csvFile); // Creates a URL for the Blob
+            downloadLink.style.display = "none"; // Hides the download link
+            document.body.appendChild(downloadLink); // Adds the download link to the document
+            downloadLink.click(); // Triggers the download
+            setTimeout(function() {
+                document.body.removeChild(downloadLink); // Removes the download link from the document
+                window.URL.revokeObjectURL(downloadLink.href); // Frees up memory by revoking the Blob URL
+            }, 100);
+        }
+    </script>
 </body>
 </html>
